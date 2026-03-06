@@ -17,61 +17,51 @@
 pip install requests schedule mitmproxy
 ```
 
-### 2. 配置抓包
-
-首先需要获取认证token：
-
-**手机端抓包（推荐）：**
+### 2. 首次配置
 
 ```bash
-# 启动抓包服务器
+# 启动程序
+python3 badminton.py
+
+# 进入设置菜单配置个人信息
+```
+
+### 3. 获取Token
+
+首次使用需要抓取token：
+
+```bash
+# 在程序中选择"3. 更新Token"
+# 或手动执行：
 mitmdump -s capture_proxy.py -p 8080
 
-# 手机配置代理：
-# - 代理地址：你的电脑IP
-# - 端口：8080
-# - 安装mitmproxy证书：http://mitm.it
-
-# 在钉钉中打开场馆预约页面，操作一次即可抓取token
+# 手机配置代理（电脑IP:8080）
+# 访问 http://mitm.it 安装证书
+# 在钉钉中打开预约页面
+# Ctrl+C 停止抓包
 ```
 
-### 3. 使用脚本
+### 4. 开始使用
 
-**手动预约：**
-
-```python
-python complete_booking.py
+```bash
+python3 badminton.py
 ```
 
-编辑脚本修改预约参数：
-```python
-book_with_partner("综合馆羽毛球", "2026-3-8", 11, 8, 9, "31001804451")
-# 参数：场馆名称、日期、场地号、开始时间、结束时间、同行人UID（可选）
-```
-
-**定时自动抢场：**
-
-```python
-python auto_grab.py
-```
-
-编辑脚本配置：
-```python
-VENUE_NAME = "综合馆羽毛球"
-TARGET_SITE = 8      # 场地号
-START_TIME = 8       # 开始时段
-END_TIME = 9         # 结束时段
-```
+**主要功能：**
+- 立即预约：交互式输入预约信息
+- 查看预约：查询当前所有预约
+- 更新Token：重新抓取认证token
+- 设置：配置默认参数
 
 ## 核心文件说明
 
 | 文件 | 功能 |
 |------|------|
-| `complete_booking.py` | 完整预约流程（含邀请同行人） |
-| `auto_grab.py` | 定时抢场脚本（每晚8点执行） |
+| `badminton.py` | 主程序（交互式终端界面） |
+| `booking_core.py` | 预约核心逻辑 |
+| `config_manager.py` | 配置管理 |
 | `capture_proxy.py` | mitmproxy抓包脚本 |
-| `update_token.py` | 更新token工具 |
-| `my_bookings.py` | 查询当前预约 |
+| `auto_grab.py` | 定时抢场脚本（高级） |
 
 ## 配置说明
 

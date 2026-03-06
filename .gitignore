@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.log
+current_token.txt
+token.txt
+config.json
+captured_requests.json
+*.js
+*.md
+!README.md

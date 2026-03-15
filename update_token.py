@@ -16,7 +16,11 @@ def show_status():
         return
 
     payload = booking_core._decode_token_payload(token)
-    config = config_manager.load()
+
+    # 自动同步：如果 JWT 中的 openid 与本地 config 不一致，自动更新
+    config, synced = booking_core.sync_identity_from_token(token)
+    if synced:
+        print("✓ 已自动同步 token 中的 openid 到本地配置")
 
     print("✓ 已读取当前 token\n")
     print(f"openid: {payload.get('openid', '<unknown>')}")

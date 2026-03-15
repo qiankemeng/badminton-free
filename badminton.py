@@ -7,6 +7,34 @@ import random
 from datetime import datetime, timedelta
 import config_manager
 import booking_core
+import update_token
+
+def first_run_check():
+    """首次运行检测：缺少 token 或身份信息时给出引导提示。"""
+    token = booking_core.get_token()
+    config = config_manager.load()
+    openid = str(config.get("openid", "")).strip()
+
+    if not token or not openid:
+        print("="*40)
+        print("  首次使用指引")
+        print("="*40)
+        if not token:
+            print("✗ 未找到 token.txt")
+        if not openid:
+            print("✗ 未找到账号信息 (openid)")
+        print()
+        print("请先完成抓包以获取登录凭证：")
+        print("  1. 运行: mitmdump -s capture_proxy.py -p 8080")
+        print("  2. 手机设置 HTTP 代理指向本机 8080 端口")
+        print("  3. 在钉钉中打开体育场馆预约页面")
+        print("  4. 抓包完成后按 Ctrl+C 停止")
+        print()
+        print("也可在主菜单中选择「更新Token」完成此步骤。")
+        print()
+        return False
+    return True
+
 
 def menu():
     print("\n" + "="*40)
@@ -202,7 +230,7 @@ def view_bookings():
         print(f"场地: {order['venue_name']} 场地{order['site_id']}")
         print(f"时间: {order['date']} {order['start_time']}-{order['end_time']}")
 
-def update_token():
+def do_update_token():
     print("\n--- 更新Token ---")
     print("1. 启动抓包: mitmdump -s capture_proxy.py -p 8080")
     print("2. 手机设置代理并访问预约页面")
@@ -211,6 +239,9 @@ def update_token():
     choice = input("\n启动抓包？(y/n): ")
     if choice.lower() == 'y':
         os.system("mitmdump -s capture_proxy.py -p 8080")
+        # 抓包完成后自动展示最新状态
+        print()
+        update_token.show_status()
 
 def settings():
     config = config_manager.load()
@@ -240,6 +271,8 @@ def settings():
         print("✓ 已保存")
 
 def main():
+    first_run_check()
+
     while True:
         menu()
         choice = input("\n选择: ")
@@ -253,7 +286,7 @@ def main():
         elif choice == '4':
             view_bookings()
         elif choice == '5':
-            update_token()
+            do_update_token()
         elif choice == '6':
             settings()
         elif choice == '0':

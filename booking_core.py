@@ -5,6 +5,7 @@ import requests
 import re
 import config_manager
 
+API_BASE = "https://sportmeta.hdu.edu.cn/book/client"
 REQUEST_TIMEOUT = 10
 DEFAULT_HEADERS = {
     'Content-Type': 'application/json',
@@ -108,6 +109,30 @@ def _ensure_booking_identity(config, token):
 
     return _validate_identity(config, token)
 
+
+def sync_identity_from_token(token=None):
+    """从 JWT payload 提取 openid，与本地 config 比对并同步。
+
+    返回 (config, synced: bool)。
+    """
+    if token is None:
+        token = get_token()
+    if not token:
+        return config_manager.load(), False
+
+    payload = _decode_token_payload(token)
+    token_openid = payload.get("openid")
+    if not token_openid:
+        return config_manager.load(), False
+
+    config = config_manager.load()
+    if str(config.get("openid", "")) == str(token_openid):
+        return config, False
+
+    config, updated = config_manager.sync_identity({"openid": str(token_openid)})
+    return config, updated
+
+
 def get_headers():
     """从 headers.json 读取完整 headers，如果不存在则使用默认值"""
     headers = DEFAULT_HEADERS.copy()
@@ -178,7 +203,7 @@ def invite_partner(order_num, partner_uid):
     }
     invite_resp, error = _post_json(
         "邀请同行人失败",
-        "https://sportmeta.hdu.edu.cn/book/client/add_playing_partner",
+        f"{API_BASE}/add_playing_partner",
         context["headers"],
         invite_data
     )
@@ -221,7 +246,7 @@ def book(venue, date, site, start, end, partner=None):
             "venue_type": "badminton",
             "site_id": site,
             "total_price": 0,
-            "time_list": [start - 8],
+            "time_list": list(range(start - 8, end - 8)),
             "start_time": f"{start:02d}:00",
             "end_time": f"{end:02d}:00"
         }
@@ -230,7 +255,7 @@ def book(venue, date, site, start, end, partner=None):
     # 创建预约
     resp, error = _post_json(
         "创建预约失败",
-        "https://sportmeta.hdu.edu.cn/book/client/creat_book_info",
+        f"{API_BASE}/creat_book_info",
         headers,
         data
     )
@@ -249,7 +274,7 @@ def book(venue, date, site, start, end, partner=None):
     # 创建订单
     order_resp, error = _post_json(
         "创建订单失败",
-        "https://sportmeta.hdu.edu.cn/book/client/creat_order",
+        f"{API_BASE}/creat_order",
         headers,
         data
     )
@@ -283,7 +308,7 @@ def get_bookings():
 
     resp, error = _post_json(
         "查询预约失败",
-        "https://sportmeta.hdu.edu.cn/book/client/post_order_info",
+        f"{API_BASE}/post_order_info",
         context["headers"],
         {}
     )

@@ -8,5 +8,3 @@ headers.json
 config.json
 captured_requests.json
 *.js
-*.md
-!README.md
